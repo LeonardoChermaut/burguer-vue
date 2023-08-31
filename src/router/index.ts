@@ -11,7 +11,7 @@ const routes = [
     path: '/pedidos',
     name: 'Pedidos',
    
-    component: () => import('../views/Request.vue')
+    component: () => import('../views/Order.vue')
   }
 ]
 
