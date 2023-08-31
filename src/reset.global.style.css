@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
 
-*:where(:not(html, iframe, canvas, img, svg, video, audio, input) :not(svg *, symbol *)) :not(input) {
+*:where(:not(iframe, canvas, img, svg, video, audio, input) :not(svg *, symbol *)) :not(input) {
     all: unset;
     display: revert;
 }
@@ -13,8 +13,9 @@
     box-sizing: border-box;
 }
 
-div {
+body {
     font-family: 'Montserrat';
+    background-color: #FFF;
 }
 
 a,
@@ -31,21 +32,4 @@ menu {
 img {
     max-inline-size: 100%;
     max-block-size: 100%;
-}
-
-meter {
-    -webkit-appearance: revert;
-    appearance: revert;
-}
-
-:where(pre) {
-    all: revert;
-}
-
-::placeholder {
-    color: unset;
-}
-
-::marker {
-    content: initial;
 }

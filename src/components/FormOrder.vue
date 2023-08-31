@@ -28,7 +28,7 @@
         </div>
 
         <div class="additional-order-conteiner">
-          <label id="additional-order-label-title" for="selected-addtional">Escolha o tipo da carne</label>
+          <label id="additional-order-label-title" for="selected-addtional">Adicionais</label>
           <div class="checkbox-container">
             <input type="checkbox" id="checkbox-additional" name="additionals" required>
             <span>Salame</span>
@@ -70,19 +70,27 @@ label {
   border-left: 0.25rem solid #FCBA03;
 }
 
-input,
-select {
-  padding: 0.188rem 0.625rem;
+input {
   width: 100%;
-  border: 1px solid #555;
+  height: 2rem;
   border-radius: .5rem;
+  padding: 0.188rem 0.625rem;
+  border: 2px solid #555;
+}
+
+select {
+  width: 95%;
+  height: 1.5rem;
+  border-radius: .5rem;
+  padding: 0.188rem 0.625rem;
+  border: 2px solid #555;
 }
 
 span {
   margin-top: 1.5rem;
 }
 
-input[type="checkbox"] {
+input {
   accent-color: #FCBA03;
   mix-blend-mode: multiply;
 }
@@ -131,6 +139,7 @@ input[type="checkbox"] {
   margin: 0 auto;
   cursor: pointer;
   transition: .5s;
+  height: 100%;
 }
 
 .submit-input-order:hover {
