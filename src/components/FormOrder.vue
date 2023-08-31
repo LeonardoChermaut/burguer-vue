@@ -8,30 +8,33 @@
           <label for="name">
             Nome do Cliente
           </label>
-          <input type="text" id="name" name="name" placeholder="Digite seu nome completo" maxlength="50" minlength="10" required>
+          <input type="text" id="name" name="name" placeholder="Digite seu nome completo" maxlength="50" minlength="10"
+            required>
         </div>
 
         <div class="input-order-conteiner">
           <label for="selected-bread">Escolha o tipo do pão</label>
           <select id="select-option-bread" name="selected-bread" required>
-            <option value="">Selecione o seu pão</option>
-            <option value="option-bread-integral">Integral</option>
+            <option value="">...</option>
+            <option v-for="bread in orderStateReactive.breads" :key="bread.id" :value="bread.type">{{ bread.type }}
+            </option>
           </select>
         </div>
 
         <div class="input-order-conteiner">
           <label for="selected-meat">Escolha o tipo da carne</label>
           <select id="select-option-meat" name="selected-meat" required>
-            <option value="">Selecione a sua carne</option>
-            <option value="option-alcatra">Alcatra</option>
+            <option value="">...</option>
+            <option v-for="meat in orderStateReactive.meats" :key="meat.id" :value="meat.type">{{ meat.type }}</option>
           </select>
         </div>
 
         <div class="additional-order-conteiner">
           <label id="additional-order-label-title" for="selected-addtional">Adicionais</label>
-          <div class="checkbox-container">
-            <input type="checkbox" id="checkbox-additional" name="additionals" required>
-            <span>Salame</span>
+          <div class="checkbox-container" v-for="opcional in orderStateReactive.optionalsData" :key="opcional.id">
+            <input type="checkbox" id="checkbox-additional" name="additionals" v-model="orderStateReactive.additionals"
+              :value="opcional.type">
+            <span>{{ opcional.type }}</span>
           </div>
         </div>
 
@@ -45,21 +48,61 @@
 </template>
   
 <script lang="ts">
+import { reactive, onMounted } from 'vue'
+const BASE_URL: string = "http://localhost:3000/ingredients";
+
+enum StatusOrderProduction {
+  REQUESTED = 'Solicitado',
+  PRODUCTION = 'Em Produção',
+  FINISHED = 'Finalizado'
+}
+
+interface IFormOrder {
+  id: number;
+  type: string;
+}
+type OrderType = IFormOrder[];
+type OptionalDataType = OrderType | null;
+type StringOrNullType = string | null;
+
 export default {
-  name: 'FormOrderComponent'
+  name: 'FormOrderComponent',
+  setup() {
+    const orderStateReactive = reactive({
+      name: null as StringOrNullType,
+      message: null as StringOrNullType,
+      breads: [] as OrderType,
+      meats: [] as OrderType,
+      additionals: [] as OrderType,
+      optionalsData: null as OptionalDataType,
+      status: StatusOrderProduction.REQUESTED,
+    });
+
+    async function getIngredientsBurguer() {
+      const request = await fetch(BASE_URL);
+      const { bread, meats, optionals } = await request.json();
+
+      orderStateReactive.breads = bread;
+      orderStateReactive.meats = meats;
+      orderStateReactive.optionalsData = optionals;
+    }
+
+    onMounted(() => {
+      getIngredientsBurguer();
+    });
+
+    return {
+      orderStateReactive,
+    };
+  },
 }
 </script>
+
 
 <style scoped>
 #form-burguer-order {
   max-width: 25rem;
   margin: 0 auto;
-}
-
-.input-order-conteiner {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1.25rem;
 }
 
 label {
@@ -86,10 +129,6 @@ select {
   border: 2px solid #555;
 }
 
-span {
-  margin-top: 1.5rem;
-}
-
 input {
   accent-color: #FCBA03;
   mix-blend-mode: multiply;
@@ -101,20 +140,26 @@ input {
   height: 1rem;
 }
 
-#additional-order-container {
+#additional-order-label-title {
+  width: 100%;
+}
+.input-order-conteiner {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.25rem;
+}
+
+.additional-order-conteiner {
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
-#additional-order-label-title {
-  width: 100%;
-}
-
 .checkbox-container {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   width: 50%;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .checkbox-container span,
@@ -123,6 +168,7 @@ input {
 }
 
 .checkbox-container span {
+  margin-top: .4rem;
   margin-left: 0.375rem;
   font-weight: bold;
 }
