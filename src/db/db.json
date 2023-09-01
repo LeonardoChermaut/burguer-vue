@@ -16,6 +16,10 @@
             {
                 "id": 4,
                 "type": "Integral"
+            },
+            {
+                "id": 5,
+                "type": "Pão Sírio"
             }
         ],
         "meats": [
