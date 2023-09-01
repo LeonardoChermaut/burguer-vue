@@ -8,25 +8,32 @@ enum StatusOrderProduction {
   FINISHED = 'Finalizado'
 }
 
-interface IFormOrder {
+type FormOrderType = {
   id: number;
   type: string;
 }
-type OrderType = IFormOrder[];
-type OptionalDataType = OrderType | null;
-type StringOrNullType = string | null;
+
+interface IFormOrderBurger {
+  nameClientRequested: string | null;
+  messageOrderDetail: string | null;
+  bread: FormOrderType[] | null;
+  meat: FormOrderType[] | null;
+  optionalData?: FormOrderType[] | null;
+  additionalIngredients?: FormOrderType[] | null;
+  statusOrderRequest: StatusOrderProduction | null,
+}
 
 export default {
   name: 'FormOrderComponent',
   setup() {
-    const orderStateReactive = reactive({
-      name: null as StringOrNullType,
-      message: null as StringOrNullType,
-      breads: [] as OrderType,
-      meats: [] as OrderType,
-      additionals: [] as OrderType,
-      optionalsData: null as OptionalDataType,
-      status: StatusOrderProduction.REQUESTED,
+    const orderStateReactive = reactive<IFormOrderBurger>({
+        nameClientRequested: null,
+        bread: null,
+        meat: null,
+        messageOrderDetail: null,
+        additionalIngredients: [],
+        optionalData: null,
+        statusOrderRequest: null, 
     });
 
     const getIngredientsBurger = async (): Promise<void> => {
@@ -34,9 +41,9 @@ export default {
         const request = await fetch(BASE_URL);
         const { breads, meats, optionals } = await request.json();
 
-        orderStateReactive.meats = meats;
-        orderStateReactive.breads = breads;
-        orderStateReactive.optionalsData = optionals;
+        orderStateReactive.meat = meats;
+        orderStateReactive.bread = breads;
+        orderStateReactive.optionalData = optionals;
 
       } catch (error) {
         //todo: create handler error
@@ -71,8 +78,8 @@ export default {
         <div class="input-order-conteiner">
           <label for="selected-bread">Escolha o tipo do pão</label>
           <select id="select-option-bread" name="selected-bread" required>
-            <option value="">...</option>
-            <option v-for="bread in orderStateReactive.breads" :key="bread.id" :value="bread.type">{{ bread.type }}
+            <option value="">selecione seu pão 🍞</option>
+            <option v-for="bread in orderStateReactive.bread" :key="bread.id" :value="bread.type">{{ bread.type }}
             </option>
           </select>
         </div>
@@ -80,15 +87,15 @@ export default {
         <div class="input-order-conteiner">
           <label for="selected-meat">Escolha o tipo da carne</label>
           <select id="select-option-meat" name="selected-meat" required>
-            <option value="">...</option>
-            <option v-for="meat in orderStateReactive.meats" :key="meat.id" :value="meat.type">{{ meat.type }}</option>
+            <option value="">selecione sua carne 🥩</option>
+            <option v-for="meat in orderStateReactive.meat" :key="meat.id" :value="meat.type">{{ meat.type }}</option>
           </select>
         </div>
 
         <div class="additional-order-conteiner">
           <label id="additional-order-label-title" for="selected-addtional">Adicionais</label>
-          <div class="checkbox-container" v-for="opcional in orderStateReactive.optionalsData" :key="opcional.id">
-            <input type="checkbox" id="checkbox-additional" name="additionals" v-model="orderStateReactive.additionals"
+          <div class="checkbox-container" v-for="opcional in orderStateReactive.optionalData" :key="opcional.id">
+            <input type="checkbox" id="checkbox-additional" name="additionals" v-model="orderStateReactive.additionalIngredients"
               :value="opcional.type">
             <span>{{ opcional.type }}</span>
           </div>
