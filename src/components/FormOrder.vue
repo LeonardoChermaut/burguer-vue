@@ -1,3 +1,59 @@
+<script lang="ts">
+import { reactive, onMounted } from 'vue'
+const BASE_URL: string = "http://localhost:3000/ingredients";
+
+enum StatusOrderProduction {
+  REQUESTED = 'Solicitado',
+  PRODUCTION = 'Em Produção',
+  FINISHED = 'Finalizado'
+}
+
+interface IFormOrder {
+  id: number;
+  type: string;
+}
+type OrderType = IFormOrder[];
+type OptionalDataType = OrderType | null;
+type StringOrNullType = string | null;
+
+export default {
+  name: 'FormOrderComponent',
+  setup() {
+    const orderStateReactive = reactive({
+      name: null as StringOrNullType,
+      message: null as StringOrNullType,
+      breads: [] as OrderType,
+      meats: [] as OrderType,
+      additionals: [] as OrderType,
+      optionalsData: null as OptionalDataType,
+      status: StatusOrderProduction.REQUESTED,
+    });
+
+    const getIngredientsBurger = async (): Promise<void> => {
+      try {
+        const request = await fetch(BASE_URL);
+        const { breads, meats, optionals } = await request.json();
+
+        orderStateReactive.meats = meats;
+        orderStateReactive.breads = breads;
+        orderStateReactive.optionalsData = optionals;
+
+      } catch (error) {
+        //todo: create handler error
+        console.error(error);
+      }
+    }
+    onMounted(() => {
+      getIngredientsBurger();
+    });
+
+    return {
+      orderStateReactive,
+    };
+  },
+}
+</script>
+
 <template>
   <div id="form-main-container">
     <p>Component of Messsage</p>
@@ -46,58 +102,6 @@
     </div>
   </div>
 </template>
-  
-<script lang="ts">
-import { reactive, onMounted } from 'vue'
-const BASE_URL: string = "http://localhost:3000/ingredients";
-
-enum StatusOrderProduction {
-  REQUESTED = 'Solicitado',
-  PRODUCTION = 'Em Produção',
-  FINISHED = 'Finalizado'
-}
-
-interface IFormOrder {
-  id: number;
-  type: string;
-}
-type OrderType = IFormOrder[];
-type OptionalDataType = OrderType | null;
-type StringOrNullType = string | null;
-
-export default {
-  name: 'FormOrderComponent',
-  setup() {
-    const orderStateReactive = reactive({
-      name: null as StringOrNullType,
-      message: null as StringOrNullType,
-      breads: [] as OrderType,
-      meats: [] as OrderType,
-      additionals: [] as OrderType,
-      optionalsData: null as OptionalDataType,
-      status: StatusOrderProduction.REQUESTED,
-    });
-
-    async function getIngredientsBurguer() {
-      const request = await fetch(BASE_URL);
-      const { bread, meats, optionals } = await request.json();
-
-      orderStateReactive.breads = bread;
-      orderStateReactive.meats = meats;
-      orderStateReactive.optionalsData = optionals;
-    }
-
-    onMounted(() => {
-      getIngredientsBurguer();
-    });
-
-    return {
-      orderStateReactive,
-    };
-  },
-}
-</script>
-
 
 <style scoped>
 #form-burguer-order {
@@ -143,6 +147,7 @@ input {
 #additional-order-label-title {
   width: 100%;
 }
+
 .input-order-conteiner {
   display: flex;
   flex-direction: column;
