@@ -1,6 +1,7 @@
 <script lang="ts">
-import { reactive, onMounted } from 'vue'
-const BASE_URL: string = "http://localhost:3000/ingredients";
+import { reactive, onMounted } from 'vue';
+
+const BASE_URL: string = 'http://localhost:3000';
 
 enum StatusOrderProduction {
   REQUESTED = 'Solicitado',
@@ -11,100 +12,157 @@ enum StatusOrderProduction {
 type FormOrderType = {
   id: number;
   type: string;
-}
+};
 
-interface IFormOrderBurger {
-  nameClientRequested: string | null;
-  messageOrderDetail: string | null;
-  bread: FormOrderType[] | null;
-  meat: FormOrderType[] | null;
-  optionalData?: FormOrderType[] | null;
+type StringOrNullType = string | null;
+
+type IngredientsBurgerType = {
+  breads?: FormOrderType[] | null;
+  meats?: FormOrderType[] | null;
   additionalIngredients?: FormOrderType[] | null;
-  statusOrderRequest: StatusOrderProduction | null,
+  statusOrderRequest?: StatusOrderProduction | null;
+  optionalData?: FormOrderType[] | null;
+};
+
+interface IFormOrderBurger extends IngredientsBurgerType {
+  nameClientRequested: StringOrNullType;
+  messageOrderDetail: StringOrNullType;
+  selectedBread: StringOrNullType;
+  selectedMeat: StringOrNullType;
+  selectedAdditionalIngredient: FormOrderType[] | null;
 }
 
 export default {
   name: 'FormOrderComponent',
   setup() {
-    const orderStateReactive = reactive<IFormOrderBurger>({
-        nameClientRequested: null,
-        bread: null,
-        meat: null,
-        messageOrderDetail: null,
-        additionalIngredients: [],
-        optionalData: null,
-        statusOrderRequest: null, 
+    const orderBurger = reactive<IFormOrderBurger>({
+      nameClientRequested: null,
+      selectedBread: null,
+      selectedMeat: null,
+      messageOrderDetail: null,
+      selectedAdditionalIngredient: [],
+      statusOrderRequest: StatusOrderProduction.PRODUCTION
     });
+
+    const handleIngredientTypeSelected = ({ target }: Event, typeIngredient: string) => {
+      const { value: ingredientSelected } = (target as HTMLSelectElement);
+
+      if (typeIngredient === 'meat') {
+        orderBurger.selectedMeat = ingredientSelected;
+      } else if (typeIngredient === 'bread') {
+        orderBurger.selectedBread = ingredientSelected;
+      }
+    };
 
     const getIngredientsBurger = async (): Promise<void> => {
       try {
-        const request = await fetch(BASE_URL);
+        const request = await fetch(`${BASE_URL}/ingredients`);
         const { breads, meats, optionals } = await request.json();
 
-        orderStateReactive.meat = meats;
-        orderStateReactive.bread = breads;
-        orderStateReactive.optionalData = optionals;
-
+        orderBurger.meats = meats;
+        orderBurger.breads = breads;
+        orderBurger.optionalData = optionals;
       } catch (error) {
-        //todo: create handler error
         console.error(error);
       }
     }
-    onMounted(() => {
-      getIngredientsBurger();
+
+    const freshPageReload = (timeout: number) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, timeout);
+        window.location.reload();
+    });
+}
+
+    const clearFormOrder = () => {
+      orderBurger.nameClientRequested = '';
+      orderBurger.selectedMeat = 'selecione seu pão 🍞';
+      orderBurger.selectedBread = 'selecione sua carne 🥩';
+      orderBurger.selectedAdditionalIngredient = [];
+    }
+
+    const createOrderBurger = async (event: Event): Promise<void> => {
+      try {
+        event.preventDefault();
+        const buildBurger = {
+          name_client: orderBurger.nameClientRequested,
+          order_status: StatusOrderProduction.PRODUCTION,
+          bread: orderBurger.selectedBread,
+          meat: orderBurger.selectedMeat,
+          additional: orderBurger?.selectedAdditionalIngredient
+        };
+
+        const bodyRequestJson = JSON.stringify(buildBurger);
+
+        const fetchOrderBurger = await fetch(`${BASE_URL}/burgers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: bodyRequestJson
+        });
+
+        const response = await fetchOrderBurger.json();
+        clearFormOrder();
+        freshPageReload(700);
+        console.log(response);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    onMounted(async () => {
+      await getIngredientsBurger();
     });
 
     return {
-      orderStateReactive,
+      orderBurger,
+      createOrderBurger,
+      handleIngredientTypeSelected
     };
-  },
-}
+  }
+};
 </script>
 
 <template>
   <div id="form-main-container">
     <p>Component of Messsage</p>
     <div>
-      <form id="form-burguer-order">
-
-        <div class="input-order-conteiner">
-          <label for="name">
-            Nome do Cliente
-          </label>
+      <form id="form-burguer-order" @submit="createOrderBurger">
+        <div class="input-order-container">
+          <label for="name"> Nome do Cliente </label>
           <input type="text" id="name" name="name" placeholder="Digite seu nome completo" maxlength="50" minlength="10"
-            required>
+            v-model="orderBurger.nameClientRequested" required />
         </div>
 
-        <div class="input-order-conteiner">
-          <label for="selected-bread">Escolha o tipo do pão</label>
-          <select id="select-option-bread" name="selected-bread" required>
+        <div class="input-order-container">
+          <label for="select-option-bread">Escolha o tipo do pão</label>
+          <select id="select-option-bread" @change="handleIngredientTypeSelected($event, 'bread')" required>
             <option value="">selecione seu pão 🍞</option>
-            <option v-for="bread in orderStateReactive.bread" :key="bread.id" :value="bread.type">{{ bread.type }}
+            <option v-for="bread in orderBurger.breads" :key="bread.id" :value="bread.type">
+              {{ bread.type }}
             </option>
           </select>
         </div>
 
-        <div class="input-order-conteiner">
-          <label for="selected-meat">Escolha o tipo da carne</label>
-          <select id="select-option-meat" name="selected-meat" required>
+        <div class="input-order-container">
+          <label for="select-option-meat">Escolha o tipo da carne</label>
+          <select id="select-option-meat" @change="handleIngredientTypeSelected($event, 'meat')" required>
             <option value="">selecione sua carne 🥩</option>
-            <option v-for="meat in orderStateReactive.meat" :key="meat.id" :value="meat.type">{{ meat.type }}</option>
+            <option v-for="meat in orderBurger.meats" :key="meat.id" :value="meat.type">{{ meat.type }}</option>
           </select>
         </div>
 
-        <div class="additional-order-conteiner">
-          <label id="additional-order-label-title" for="selected-addtional">Adicionais</label>
-          <div class="checkbox-container" v-for="opcional in orderStateReactive.optionalData" :key="opcional.id">
-            <input type="checkbox" id="checkbox-additional" name="additionals" v-model="orderStateReactive.additionalIngredients"
-              :value="opcional.type">
+        <div class="additional-order-container">
+          <label id="additional-order-label-title" for="additional-order-label-title">Adicionais</label>
+          <div class="checkbox-container" v-for="opcional in orderBurger.optionalData" :key="opcional.id">
+            <input type="checkbox" id="checkbox-additional" name="additional-order-label-title"
+              v-model="orderBurger.selectedAdditionalIngredient" :value="opcional.type" />
             <span>{{ opcional.type }}</span>
           </div>
         </div>
 
         <div class="input-order-conteiner">
-          <input type="submit" class="submit-input-order" value="Montar meu hamburguer">
+          <input type="submit" class="submit-input-order" value="Montar meu hamburguer" />
         </div>
-
       </form>
     </div>
   </div>
@@ -121,27 +179,33 @@ label {
   margin-bottom: 0.938rem;
   color: #222;
   padding: 0.313rem 0.625rem;
-  border-left: 0.25rem solid #FCBA03;
+  border-left: 0.25rem solid #fcba03;
 }
 
 input {
   width: 100%;
   height: 2rem;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   padding: 0.188rem 0.625rem;
   border: 2px solid #555;
 }
 
 select {
+  font-size: 90%;
   width: 95%;
   height: 1.5rem;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   padding: 0.188rem 0.625rem;
   border: 2px solid #555;
 }
 
-input {
-  accent-color: #FCBA03;
+input[type="checkbox"] {
+  accent-color: #fcba03;
+  mix-blend-mode: multiply;
+}
+
+input[type="text"] {
+  accent-color: #000000;
   mix-blend-mode: multiply;
 }
 
@@ -155,13 +219,13 @@ input {
   width: 100%;
 }
 
-.input-order-conteiner {
+.input-order-container {
   display: flex;
   flex-direction: column;
   margin-bottom: 1.25rem;
 }
 
-.additional-order-conteiner {
+.additional-order-container {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -180,7 +244,7 @@ input {
 }
 
 .checkbox-container span {
-  margin-top: .4rem;
+  margin-top: 0.4rem;
   margin-left: 0.375rem;
   font-weight: bold;
 }
@@ -188,7 +252,7 @@ input {
 .submit-input-order {
   width: 100%;
   text-align: center;
-  color: #FCBA03;
+  color: #fcba03;
   font-weight: bold;
   background-color: #222;
   border: 0.125rem solid #222;
@@ -196,12 +260,12 @@ input {
   font-size: 1rem;
   margin: 0 auto;
   cursor: pointer;
-  transition: .5s;
+  transition: 0.5s;
   height: 100%;
 }
 
 .submit-input-order:hover {
-  background-color: #FCBA03;
+  background-color: #fcba03;
   color: #222;
 }
 </style>
