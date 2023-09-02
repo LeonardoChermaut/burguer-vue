@@ -1,5 +1,6 @@
 <script lang="ts">
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref } from 'vue'
+import MessageOrderComponent from './Message.vue'
 
 const BASE_URL: string = 'http://localhost:3000';
 
@@ -10,31 +11,37 @@ enum StatusOrderProduction {
 }
 
 type FormOrderType = {
-  id: number;
-  type: string;
-};
+  id: number
+  type: string
+}
 
-type StringOrNullType = string | null;
+type StringOrNullType = string | null
 
 type IngredientsBurgerType = {
-  breads?: FormOrderType[] | null;
-  meats?: FormOrderType[] | null;
-  additionalIngredients?: FormOrderType[] | null;
-  statusOrderRequest?: StatusOrderProduction | null;
-  optionalData?: FormOrderType[] | null;
-};
+  breads?: FormOrderType[] | null
+  meats?: FormOrderType[] | null
+  additionalIngredients?: FormOrderType[] | null
+  statusOrderRequest?: StatusOrderProduction | null
+  optionalData?: FormOrderType[] | null
+}
 
 interface IFormOrderBurger extends IngredientsBurgerType {
-  nameClientRequested: StringOrNullType;
-  messageOrderDetail: StringOrNullType;
-  selectedBread: StringOrNullType;
-  selectedMeat: StringOrNullType;
-  selectedAdditionalIngredient: FormOrderType[] | null;
+  nameClientRequested: StringOrNullType
+  messageOrderDetail: StringOrNullType
+  selectedBread: StringOrNullType
+  selectedMeat: StringOrNullType
+  selectedAdditionalIngredient: FormOrderType[] | null
 }
 
 export default {
   name: 'FormOrderComponent',
+  components: {
+    MessageOrderComponent
+  },
   setup() {
+    const isLoadingIngredients = ref(false);
+    const isCreatingOrder = ref(false);
+
     const orderBurger = reactive<IFormOrderBurger>({
       nameClientRequested: null,
       selectedBread: null,
@@ -45,34 +52,43 @@ export default {
     });
 
     const handleIngredientTypeSelected = ({ target }: Event, typeIngredient: string) => {
-      const { value: ingredientSelected } = (target as HTMLSelectElement);
+      const { value: ingredientSelected } = target as HTMLSelectElement;
 
       if (typeIngredient === 'meat') {
         orderBurger.selectedMeat = ingredientSelected;
       } else if (typeIngredient === 'bread') {
         orderBurger.selectedBread = ingredientSelected;
       }
-    };
+    }
 
     const getIngredientsBurger = async (): Promise<void> => {
       try {
+        isLoadingIngredients.value = !isLoadingIngredients.value;
         const request = await fetch(`${BASE_URL}/ingredients`);
         const { breads, meats, optionals } = await request.json();
 
         orderBurger.meats = meats;
         orderBurger.breads = breads;
         orderBurger.optionalData = optionals;
+
+        isLoadingIngredients.value = !isLoadingIngredients.value;
       } catch (error) {
         console.error(error);
       }
     }
 
-    const freshPageReload = (timeout: number) => {
-    return new Promise((resolve) => {
-        setTimeout(resolve, timeout);
-        window.location.reload();
-    });
-}
+    const delayToExecute = (action: any, delay: number) => {
+      return new Promise<void>((resolve) =>
+        setTimeout(() => {
+          typeof action === 'function' ? action() : action;
+          resolve();
+        }, delay)
+      )
+    }
+
+    const reloadCurrentPage = (timeDelay: number) => {
+      return delayToExecute(() => location.reload() , timeDelay);
+    }
 
     const clearFormOrder = () => {
       orderBurger.nameClientRequested = '';
@@ -83,7 +99,9 @@ export default {
 
     const createOrderBurger = async (event: Event): Promise<void> => {
       try {
+        isCreatingOrder.value = !isCreatingOrder.value;
         event.preventDefault();
+
         const buildBurger = {
           name_client: orderBurger.nameClientRequested,
           order_status: StatusOrderProduction.PRODUCTION,
@@ -100,37 +118,52 @@ export default {
           body: bodyRequestJson
         });
 
-        const response = await fetchOrderBurger.json();
+        const { id } = await fetchOrderBurger.json();
+
+        orderBurger.messageOrderDetail = `Pedido Nº ${id} realizado com sucesso! =)`;
+        isCreatingOrder.value = !isCreatingOrder.value;
+
         clearFormOrder();
-        freshPageReload(700);
-        console.log(response);
+
+        return await reloadCurrentPage(3000);
       } catch (error) {
         console.error(error);
+        throw new Error();
       }
     }
 
     onMounted(async () => {
       await getIngredientsBurger();
-    });
+    })
 
     return {
+      isLoadingIngredients,
+      isCreatingOrder,
       orderBurger,
       createOrderBurger,
       handleIngredientTypeSelected
-    };
+    }
   }
-};
+}
 </script>
 
 <template>
   <div id="form-main-container">
-    <p>Component of Messsage</p>
+    <MessageOrderComponent :message="orderBurger.messageOrderDetail" v-show="orderBurger.messageOrderDetail" />
     <div>
       <form id="form-burguer-order" @submit="createOrderBurger">
         <div class="input-order-container">
           <label for="name"> Nome do Cliente </label>
-          <input type="text" id="name" name="name" placeholder="Digite seu nome completo" maxlength="50" minlength="10"
-            v-model="orderBurger.nameClientRequested" required />
+          <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="Digite seu nome completo"
+            maxlength="50"
+            minlength="10"
+            v-model="orderBurger.nameClientRequested"
+            required
+            :disabled="isCreatingOrder"/>
         </div>
 
         <div class="input-order-container">
@@ -151,17 +184,30 @@ export default {
           </select>
         </div>
 
-        <div class="additional-order-container">
+        <div class="input-order-container" v-if="isLoadingIngredients">
+          <label id="additional-order-label-title" for="additional-order-label-title">Carregando Adicionais...</label>
+        </div>
+        <div v-else class="additional-order-container">
           <label id="additional-order-label-title" for="additional-order-label-title">Adicionais</label>
           <div class="checkbox-container" v-for="opcional in orderBurger.optionalData" :key="opcional.id">
-            <input type="checkbox" id="checkbox-additional" name="additional-order-label-title"
-              v-model="orderBurger.selectedAdditionalIngredient" :value="opcional.type" />
+            <input
+              type="checkbox"
+              id="checkbox-additional"
+              name="additional-order-label-title"
+              v-model="orderBurger.selectedAdditionalIngredient"
+              :value="opcional.type"
+            />
             <span>{{ opcional.type }}</span>
           </div>
         </div>
 
         <div class="input-order-conteiner">
-          <input type="submit" class="submit-input-order" value="Montar meu hamburguer" />
+          <input
+            type="submit"
+            class="submit-input-order"
+            :value="isCreatingOrder ? 'Montando pedido...' : 'Montar meu hamburguer'"
+            :disabled="isCreatingOrder"
+          />
         </div>
       </form>
     </div>
@@ -199,12 +245,12 @@ select {
   border: 2px solid #555;
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   accent-color: #fcba03;
   mix-blend-mode: multiply;
 }
 
-input[type="text"] {
+input[type='text'] {
   accent-color: #000000;
   mix-blend-mode: multiply;
 }
@@ -263,9 +309,13 @@ input[type="text"] {
   transition: 0.5s;
   height: 100%;
 }
-
 .submit-input-order:hover {
   background-color: #fcba03;
   color: #222;
+}
+
+.submit-input-order:disabled {
+  color: #ffffff;
+  background-color: #5d5d5d;
 }
 </style>
