@@ -1,5 +1,6 @@
 <script lang="ts">
 import DashboardComponent from '../components/Dashboard.vue';
+
 export default {
   name: 'OrderView',
   components: {
