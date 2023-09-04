@@ -12,7 +12,6 @@
   
   <style scoped>
     #footer {
-      bottom: 0;
       width: 100%;
       display: flex;
       color: #FCBA03;
@@ -21,7 +20,8 @@
       border-top: 0.25rem solid #111;
       align-items: center;
       justify-content: center;
-      position: relative;
+      bottom: 0; left: 0; right: 0;
+      position: fixed;
     }
 
 </style>

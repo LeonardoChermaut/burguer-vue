@@ -1,28 +1,16 @@
 <script lang="ts">
 import { reactive, onMounted, ref } from 'vue'
 import MessageOrderComponent from './Message.vue'
-
-const BASE_URL: string = 'http://localhost:3000';
-
-enum StatusOrderProduction {
-  REQUESTED = 'Solicitado',
-  PRODUCTION = 'Em Produção',
-  FINISHED = 'Finalizado'
-}
-
-type FormOrderType = {
-  id: number
-  type: string
-}
+import { StatusOrderProduction, BASE_URL, type GlobalOrderType } from '../utils'
 
 type StringOrNullType = string | null
 
 type IngredientsBurgerType = {
-  breads?: FormOrderType[] | null
-  meats?: FormOrderType[] | null
-  additionalIngredients?: FormOrderType[] | null
+  breads?: GlobalOrderType[] | null
+  meats?: GlobalOrderType[] | null
+  additionalIngredients?: GlobalOrderType[] | null
   statusOrderRequest?: StatusOrderProduction | null
-  optionalData?: FormOrderType[] | null
+  optionalData?: GlobalOrderType[] | null
 }
 
 interface IFormOrderBurger extends IngredientsBurgerType {
@@ -30,7 +18,7 @@ interface IFormOrderBurger extends IngredientsBurgerType {
   messageOrderDetail: StringOrNullType
   selectedBread: StringOrNullType
   selectedMeat: StringOrNullType
-  selectedAdditionalIngredient: FormOrderType[] | null
+  selectedAdditionalIngredient: GlobalOrderType[] | null
 }
 
 export default {
@@ -132,8 +120,8 @@ export default {
       }
     }
 
-    onMounted(async () => {
-      await getIngredientsBurger();
+    onMounted(() => {
+      getIngredientsBurger();
     })
 
     return {
@@ -218,6 +206,7 @@ export default {
 #form-burguer-order {
   max-width: 25rem;
   margin: 0 auto;
+  margin-bottom: 8%;
 }
 
 label {
@@ -238,8 +227,8 @@ input {
 
 select {
   font-size: 90%;
-  width: 95%;
-  height: 1.5rem;
+  width: 100%;
+  height: 2rem;
   border-radius: 0.5rem;
   padding: 0.188rem 0.625rem;
   border: 2px solid #555;
