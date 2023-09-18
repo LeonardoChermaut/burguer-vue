@@ -81,5 +81,17 @@
       "type": "Finalizado"
     }
   ],
-  "burgers": []
+  "burgers": [
+    {
+      "name_client": "Amanda Andrades",
+      "order_status": "Em Produção",
+      "bread": "Parmesão e Orégano",
+      "meat": "Alcatra",
+      "additional": [
+        "Bacon",
+        "Pepino"
+      ],
+      "id": 1
+    }
+  ]
 }

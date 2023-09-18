@@ -1,6 +1,8 @@
 <script lang="ts">
+import MessageOrderComponent from './Message.vue'
+import { type StatusOrderType } from '../utils'
 import { onMounted, reactive } from 'vue'
-import { BASE_URL, type StatusOrderType } from '../utils'
+import { useFetch } from '../data'
 
 type OrderDetailType = {
   id: number
@@ -25,10 +27,16 @@ const OrderClient = reactive<OrdersClientsType>({
 
 export default {
   name: 'DashboardComponent',
+  components: {
+    MessageOrderComponent
+  },
   setup() {
+
     const getOrdersClient = async (): Promise<void> => {
-      const fetchRequest = await fetch(`${BASE_URL}/burgers`)
-      const orders = await fetchRequest.json()
+      const fetchRequest = await useFetch('/burgers', {
+        method: 'GET'
+      });
+      const orders = await fetchRequest.json();
 
       OrderClient.orders = orders
     }
@@ -38,7 +46,9 @@ export default {
     }
 
     const getOrderClientStatus = async (): Promise<void> => {
-      const fetchRequest = await fetch(`${BASE_URL}/status`);
+      const fetchRequest = await useFetch('/status', {
+        method: 'GET'
+      });
       const status = await fetchRequest.json();
 
       OrderClient.status = status;
@@ -46,14 +56,14 @@ export default {
 
     const deleteOrderBurger = async (id: number): Promise<void> => {
       try {
-        const fetchRequest = await fetch(`${BASE_URL}/burgers/${id}`, {
+        const fetchRequest = await useFetch(`/burgers/${id}`, {
           method: 'DELETE'
         });
         await fetchRequest.json();
   
         getOrdersClient();
       } catch (error) {
-        console.log(error);
+        console.error(error);
         throw new Error("Erro na requisição do pedido");
       }
     }
@@ -61,19 +71,16 @@ export default {
       const { value: orderSelected } = target as HTMLSelectElement;
 
       const dataJson = JSON.stringify({ status: orderSelected });
-      await fetch(`${BASE_URL}/burgers/${id}`, {
+      await useFetch(`/burgers/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: dataJson
-      })
-
+      });
     }
 
-    onMounted(() => {
-      getOrdersClient();
-      getOrderClientStatus();
+    onMounted(async() => {
+      await Promise.all([getOrdersClient(), getOrderClientStatus()])
     })
-
+    
     return {
       getOrdersClient,
       OrderClient,
@@ -86,7 +93,7 @@ export default {
 </script>
 
 <template>
-  <div class="dashboard-main-content" v-if="OrderClient.orders && OrderClient.orders?.length">
+  <div class="dashboard-main-content" v-if="OrderClient.orders && OrderClient.orders?.length > 0">
     <div id="burger-table">
       <div>
         <div id="burger-table-heading">
@@ -129,9 +136,11 @@ export default {
 </template>
 
 <style scoped>
+
 #burger-table {
   max-width: 1200px;
   margin: 0 auto;
+  height: 100%;
 }
 
 #burger-table-heading,
@@ -146,7 +155,6 @@ export default {
   padding: 12px;
   border-bottom: 3px solid #333;
 }
-
 .burger-table-row {
   width: 100%;
   padding: 0.9rem;
@@ -172,7 +180,6 @@ select {
   border: #555 solid 1px;
 }
 
-
 .delete-btn {
   background-color: #222;
   color:#fcba03;
@@ -184,7 +191,6 @@ select {
   cursor: pointer;
   transition: .5s;
 }
-
 .delete-btn:hover {
   background-color: transparent;
   color: #222;

@@ -21,7 +21,7 @@
       align-items: center;
       justify-content: center;
       bottom: 0; left: 0; right: 0;
-      position: fixed;
+      position: relative;
     }
 
 </style>

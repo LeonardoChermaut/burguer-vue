@@ -1,7 +1,8 @@
 <script lang="ts">
 import { reactive, onMounted, ref } from 'vue'
 import MessageOrderComponent from './Message.vue'
-import { StatusOrderProduction, BASE_URL, type GlobalOrderType } from '../utils'
+import { StatusOrderProduction, type GlobalOrderType } from '../utils'
+import { useFetch } from '../data'
 
 type StringOrNullType = string | null
 
@@ -29,7 +30,6 @@ export default {
   setup() {
     const isLoadingIngredients = ref(false);
     const isCreatingOrder = ref(false);
-
     const orderBurger = reactive<IFormOrderBurger>({
       nameClientRequested: null,
       selectedBread: null,
@@ -52,7 +52,9 @@ export default {
     const getIngredientsBurger = async (): Promise<void> => {
       try {
         isLoadingIngredients.value = !isLoadingIngredients.value;
-        const request = await fetch(`${BASE_URL}/ingredients`);
+        const request = await useFetch('/ingredients', {
+          method: 'GET'
+        });
         const { breads, meats, optionals } = await request.json();
 
         orderBurger.meats = meats;
@@ -100,9 +102,8 @@ export default {
 
         const bodyRequestJson = JSON.stringify(buildBurger);
 
-        const fetchOrderBurger = await fetch(`${BASE_URL}/burgers`, {
+        const fetchOrderBurger = await useFetch('/burgers', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: bodyRequestJson
         });
 
@@ -113,7 +114,7 @@ export default {
 
         clearFormOrder();
 
-        return await reloadCurrentPage(3000);
+        return await reloadCurrentPage(1500);
       } catch (error) {
         console.error(error);
         throw new Error();
