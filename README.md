@@ -1,13 +1,4 @@
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+## Project Install
 
 ```sh
 npm install
@@ -15,26 +6,18 @@ or
 yarn install
 ```
 
-### Compile and Hot-Reload for Development
+### Start project and fake db JSON
 
+##### Running Project:
 ```sh
 npm run dev
 or
 yarn run dev
 ```
 
-### Type-Check, Compile and Minify for Production
-
+##### Running DB Backend:
 ```sh
-npm run build
+npm run backend
 or
-yarn run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-or
-yarn run lint
+yarn run backend
 ```
