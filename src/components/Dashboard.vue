@@ -86,7 +86,7 @@ export default {
 </script>
 
 <template>
-  <div class="dashboard-main-content" v-if="OrderClient.orders">
+  <div class="dashboard-main-content" v-if="OrderClient.orders && OrderClient.orders?.length">
     <div id="burger-table">
       <div>
         <div id="burger-table-heading">
@@ -124,7 +124,7 @@ export default {
     </div>
   </div>
   <div v-else>
-    <h2>Não há pedidos no momento!</h2>
+    <MessageOrderComponent message="Não há pedidos no momento" color="warning" />
   </div>
 </template>
 
